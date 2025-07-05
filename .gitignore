@@ -1,0 +1,8 @@
+.env
+__pycache__/
+.DS_Store
+
+
+stock_report.md
+report.md
+investment_report.json
