@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 # interpolate any tasks and agents information
 
 
-TOPIC = "President Donald Trump"
+PERSON = "President Donald Trump"
 
 
 def run():
@@ -22,7 +22,7 @@ def run():
     Run the crew.
     """
     inputs = {
-        "topic": "President Donald Trump",
+        "topic": PERSON,
         "current_date": str(datetime.now().date()),
     }
 
@@ -36,7 +36,7 @@ def train():
     """
     Train the crew for a given number of iterations.
     """
-    inputs = {"topic": TOPIC, "current_date": str(datetime.now().date())}
+    inputs = {"topic": PERSON, "current_date": str(datetime.now().date())}
     try:
         Trumproom().crew().train(
             n_iterations=int(sys.argv[1]), filename=sys.argv[2], inputs=inputs
@@ -61,7 +61,7 @@ def test():
     """
     Test the crew execution and returns the results.
     """
-    inputs = {"topic": TOPIC, "current_date": str(datetime.now().date())}
+    inputs = {"topic": PERSON, "current_date": str(datetime.now().date())}
 
     try:
         Trumproom().crew().test(
