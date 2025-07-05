@@ -1,4 +1,4 @@
-# Trumproom Crew
+# Trumproom
 ## By Michael Meirovich
 
 Welcome to the Trumproom Crew project, powered by [crewAI](https://crewai.com). 
