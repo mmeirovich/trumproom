@@ -1,4 +1,6 @@
+import json
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from enum import Enum
@@ -13,6 +15,8 @@ from trumproom.crew import Trumproom
 
 DEFAULT_TOPIC = "President Donald Trump"
 
+_executor = ThreadPoolExecutor(max_workers=4)
+
 
 # --- Models ---
 
@@ -26,6 +30,11 @@ class JobStatus(str, Enum):
 
 class RunRequest(BaseModel):
     topic: str = Field(default=DEFAULT_TOPIC, examples=["President Donald Trump"])
+
+
+class InvestmentAdvice(BaseModel):
+    recommended_investments: list[str]
+    stocks_to_avoid: list[str]
 
 
 class JobResponse(BaseModel):
@@ -87,9 +96,54 @@ app = FastAPI(
 )
 
 
+def _kickoff_crew() -> str:
+    inputs = {
+        "topic": DEFAULT_TOPIC,
+        "current_date": str(datetime.now(timezone.utc).date()),
+    }
+    result = Trumproom().crew().kickoff(inputs=inputs)
+    return result.raw if hasattr(result, "raw") else str(result)
+
+
+def _parse_investment_advice(raw: str) -> InvestmentAdvice:
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        # The LLM sometimes wraps JSON in markdown fences
+        import re
+
+        match = re.search(r"\{.*\}", raw, re.DOTALL)
+        if not match:
+            raise ValueError(f"Could not parse crew output as JSON: {raw[:200]}")
+        data = json.loads(match.group())
+
+    # Normalize varying key names the LLM might use
+    rec = data.get("recommended_investments") or data.get("recommendations", [])
+    avoid = data.get("stocks_to_avoid") or data.get("avoid", [])
+    return InvestmentAdvice(recommended_investments=rec, stocks_to_avoid=avoid)
+
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.post("/advice", response_model=InvestmentAdvice)
+async def get_advice():
+    """Run the full crew pipeline and return investment recommendations.
+
+    This is a synchronous call — it blocks until the crew finishes (may take several minutes).
+    """
+    loop = __import__("asyncio").get_running_loop()
+    try:
+        raw = await loop.run_in_executor(_executor, _kickoff_crew)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Crew execution failed: {e}")
+
+    try:
+        return _parse_investment_advice(raw)
+    except ValueError as e:
+        raise HTTPException(status_code=502, detail=str(e))
 
 
 @app.post("/runs", response_model=JobResponse, status_code=202)
