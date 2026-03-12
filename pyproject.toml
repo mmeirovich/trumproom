@@ -6,6 +6,8 @@ authors = [{ name = "Your Name", email = "you@example.com" }]
 requires-python = ">=3.10,<3.14"
 dependencies = [
     "crewai[tools]>=0.140.0,<1.0.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
 ]
 
 [project.scripts]
@@ -14,6 +16,7 @@ run_crew = "trumproom.main:run"
 train = "trumproom.main:train"
 replay = "trumproom.main:replay"
 test = "trumproom.main:test"
+serve = "trumproom.api:start"
 
 [build-system]
 requires = ["hatchling"]
