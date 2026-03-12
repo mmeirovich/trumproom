@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 import sys
-import warnings
 
 from datetime import datetime
 
 from trumproom.crew import Trumproom
-
-warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
 # This main file is intended to be a way for you to run your
 # crew locally, so refrain from adding unnecessary logic into this file.
